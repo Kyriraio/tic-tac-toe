@@ -9,6 +9,16 @@
     <title>Tic-Tac-God</title>
 </head>
 <body>
+<div class = "login-page page">
+    <div class = "form">
+        <form>
+            <input name="login" type="text" placeholder="name"/>
+            <input name="password" type="password" placeholder="password"/>
+            <button id="loginAccount">login</button>
+        </form>
+
+    </div>
+</div>
 
 </body>
 </html>
