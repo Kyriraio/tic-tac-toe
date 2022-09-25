@@ -96,3 +96,6 @@ body{
 .error{
     color: #14BDAC;
 }
+.attacker{
+    color: red;
+}

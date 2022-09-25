@@ -2,12 +2,12 @@
 session_start();
 
 class Bot{
-    private $field = [];
-    private $counter = 0;
-    private $symbols = [];
-    private $cost_field = [];
-    private $values_field = [3,2,3,2,4,2,3,2,3];
-    private $response = ['id'=>-1,'level'=>1,'result'=>''];
+    private int $counter = 0;
+    private array $field;
+    private array $symbols;
+    private array $cost_field = [];
+    private array $values_field = [3,2,3,2,4,2,3,2,3];
+    private array $response = ['id'=>-1,'level'=>1,'result'=>''];
 
     public function __construct()
     {
@@ -22,14 +22,8 @@ class Bot{
             {
                 $this->counter++;
                 $this->values_field[$i] = 0;
-                if ($this->field[$i]==$this->symbols['bot'])
-                {
-                    $this->cost_field[$i] = 1;
-                }
-                else
-                {
-                    $this->cost_field[$i] = -1;
-                }
+
+                $this->cost_field[$i] = ($this->field[$i]==$this->symbols['bot']) ? 1 : -1;
             }
             else
             {
@@ -38,41 +32,65 @@ class Bot{
 
         }
     }
-
-    public function getBotWinningCell()
+    public function getBotWinningCell(): bool|int
     {
         return $this->getAnyWinningCell(2);
     }
-    public function getPlayerWinningCell()
+    public function getPlayerWinningCell(): bool|int
     {
         return $this->getAnyWinningCell(-2);
     }
-    public function checkPlayerWin()
+    public function checkBotWin(): bool
+    {
+        return $this->checkSomeoneWin(3);
+    }
+    public function checkPlayerWin(): bool
+    {
+        return $this->checkSomeoneWin(-3);
+    }
+    public function checkSomeoneWin($cost): bool
     {
         for($i = 0;$i<9;$i+=3) {
-            if ($this->cost_field[$i] + $this->cost_field[$i + 1] + $this->cost_field[$i + 2] == -3)
+            if ($this->cost_field[$i] + $this->cost_field[$i + 1] + $this->cost_field[$i + 2] == $cost)
             {
                return true;
             }
         }
         for($i = 0;$i<3;$i++) {
-            if($this->cost_field[$i] + $this->cost_field[$i+3] + $this->cost_field[$i+6] == -3)
+            if($this->cost_field[$i] + $this->cost_field[$i+3] + $this->cost_field[$i+6] == $cost)
             {
                 return true;
             }
         }
-        if($this->cost_field[0] + $this->cost_field[4] + $this->cost_field[8] == -3)
+        if($this->cost_field[0] + $this->cost_field[4] + $this->cost_field[8] == $cost)
         {
             return true;
         }
-        if($this->cost_field[2] + $this->cost_field[4] + $this->cost_field[6] == -3)
+        if($this->cost_field[2] + $this->cost_field[4] + $this->cost_field[6] == $cost)
         {
             return true;
         }
         return false;
     }
-    public function getAnyWinningCell($cost)
-    {//суммирует кост филд, если не хватает одного для победы, сумма столбца будет 2.тогда вернём элемент со значением 0
+
+    public function getEmptyDiagonalCell($cost): bool|int
+    {
+        if($this->cost_field[0] + $this->cost_field[4] + $this->cost_field[8] == $cost)
+        {
+            if($this->cost_field[0]==0) return 0;
+            if($this->cost_field[4]==0) return 4;
+            if($this->cost_field[8]==0) return 8;
+        }
+        if($this->cost_field[2] + $this->cost_field[4] + $this->cost_field[6] == $cost)
+        {
+            if($this->cost_field[2]==0) return 2;
+            if($this->cost_field[4]==0) return 4;
+            if($this->cost_field[6]==0) return 6;
+        }
+      return false;
+    }
+    public function getAnyWinningCell($cost): bool|int
+    {
         for($i = 0;$i<9;$i+=3) {
             if ($this->cost_field[$i] + $this->cost_field[$i + 1] + $this->cost_field[$i + 2] == $cost) {
                 if ($this->cost_field[$i] == 0) return $i;
@@ -88,46 +106,63 @@ class Bot{
                 if($this->cost_field[$i+6]==0) return $i+6;
             }
         }
-        if($this->cost_field[0] + $this->cost_field[4] + $this->cost_field[8] == $cost)
-        {
-            if($this->cost_field[0]==0) return 0;
-            if($this->cost_field[4]==0) return 4;
-            if($this->cost_field[8]==0) return 8;
-        }
-        if($this->cost_field[2] + $this->cost_field[4] + $this->cost_field[6] == $cost)
-        {
-            if($this->cost_field[2]==0) return 2;
-            if($this->cost_field[4]==0) return 4;
-            if($this->cost_field[6]==0) return 6;
-        }
+
+        if($cell = $this->getEmptyDiagonalCell($cost)) return $cell;
         return false;
     }
-    public function getMostValuableCell()
+    public function getSomeValuableCell(): bool|int
     {
-        return array_search(max($this->values_field),$this->values_field);
-    }
-    public function makeMoveO()
-    {
-        if($this->counter<=1)// в начале
-        {
-            $this->response['id'] = $this->getMostValuableCell();
+        if($this->botIsSmart()){
+            $cell = $this->getMostValuableCell();
         }
-        /*else if($this->counter == 2)// особый случай
+        else if($this->botIsSmart()){
+            $cell = $this->getMostValuableCell(-1);
+        }
+        else {
+            $cell = $this->getMostValuableCell(-2);
+        }
+        return ($cell) ?: $this->getMostValuableCell();
+    }
+    public function getMostValuableCell($stupidShift=0): bool|int
+    {
+        $max = max($this->values_field);
+        if ($max==2) $stupidShift = 0;
+        return array_search(max($this->values_field)+$stupidShift, $this->values_field);
+    }
+    public function botIsSmart($intelligencePercentage = 65): bool
+    {
+        return ((rand(0, 100) <= $intelligencePercentage));
+    }
+    private function specialEarlyStrategy()
+    {
+        if($this->counter==2 && $this->field[4]==$this->symbols['player'])
         {
+            $this->response['id']=($cell = $this->getEmptyDiagonalCell(0)) ? $cell : $this->getMostValuableCell();
+        }
+        else if($this->counter == 3 && $this->field[4]==$this->symbols['bot'])
+        {
+            if($this->field[2]==$this->symbols['player'] && $this->field[6]==$this->symbols['player']
+                || $this->field[0]==$this->symbols['player'] && $this->field[8]==$this->symbols['player'])
+            {
+                $this->response['id'] = 1+2*rand(0,3);
+            }
 
-        }*/
-        else if($this->checkPlayerWin())
+        }
+    }
+    public function makeMove()
+    {
+
+        if($this->checkPlayerWin())
         {
             $this->response['result'] =  'win';
-            //$this->response['id'] = -1;
+
         }
-        else if ($cell = $this->getBotWinningCell())
+        else if ($this->botIsSmart(98) && ($cell = $this->getBotWinningCell()) )
         {
             $this->response['id'] =  $cell;
             $this->response['result'] = 'lose';
         }
-        //проверка на атаку должна идти до проверки на защиту
-        else if($cell = $this->getPlayerWinningCell()) //если это уже не первый ход, проверить, что придумал игрок
+        else if($this->botIsSmart(95) && ($cell = $this->getPlayerWinningCell() ))
         {
             $this->response['id'] =  $cell;
         }
@@ -139,16 +174,14 @@ class Bot{
                 $this->response['id'] = $this->getMostValuableCell();
             }
         }
-        else  //разумные действия закончились, делаем случайный ход
+        if($this->botIsSmart() )
         {
-            /*$i=0;
-            while($this->field[$i]!='')
-            {
-                $i++;
-            }
-            $this->response['id'] =  $i;*/
-            $this->response['id'] = $this->getMostValuableCell();
+            $this->specialEarlyStrategy();
         }
+        if($this->response['id']==-1 && $this->response['result']=='')  {
+            $this->response['id'] = $this->getSomeValuableCell();
+        }
+        $this->checkBotWin();
     }
 
     public function updateLevel(){
@@ -176,45 +209,6 @@ class Bot{
         echo json_encode($this->response);
     }
 
-    public function makeMoveX()
-    {
-        if($this->counter<=1)// в начале
-        {
-            $this->response['id'] = array_search(max($this->values_field),$this->values_field);
-        }
-        /*else if($this->counter == 2)// особый случай
-        {
-
-        }*/
-        else if($this->checkPlayerWin())
-        {
-            $this->response['result'] =  'win';
-        }
-        else if ($cell = $this->getBotWinningCell())
-        {
-            $this->response['id'] =  $cell;
-            $this->response['result'] = 'lose';
-        }
-        //проверка на атаку должна идти до проверки на защиту
-        else if($cell = $this->getPlayerWinningCell()) //если это уже не первый ход, проверить, что придумал игрок
-        {
-            $this->response['id'] =  $cell;
-        }
-        else if($this->counter >= 8)
-        {
-            $this->response['result'] = 'draw';
-        }
-        else  //разумные действия закончились, делаем случайный ход
-        {
-            $i=0;
-            while($this->field[$i]!='')
-            {
-                $i++;
-            }
-            $this->response['id'] =  $i;
-        }
-        echo json_encode($this->response);
-    }
 
 }
 
@@ -223,6 +217,6 @@ class Bot{
 
 $bot = new Bot();
 $bot->getFieldInfo();
-$bot->makeMoveO();
+$bot->makeMove();
 $bot->updateLevel();
 $bot->echoResponse();

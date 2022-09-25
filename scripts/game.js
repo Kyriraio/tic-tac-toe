@@ -1,6 +1,6 @@
 $(document).ready(function(){
     const EMPTY_CELL = '';
-    let table = $(".table");
+    const ATTACK_SYMBOL = 'x';
     let game_field =[
         '','','',
         '','','',
@@ -9,6 +9,7 @@ $(document).ready(function(){
         player : 'x',
         bot : 'o'
     };
+    highlightAttacker();
     let clickDisabled = false;
 
     $('.td').on('click',function(){
@@ -24,6 +25,16 @@ $(document).ready(function(){
 
     });
 
+    function highlightAttacker()
+    {
+        Object.keys(symbols).forEach(key=>{
+            let label_name = $(`#${key}-name`);
+
+            (symbols[key]===ATTACK_SYMBOL) ?
+                $(label_name).addClass('attacker')
+                : $(label_name).removeClass('attacker')
+        })
+    }
     function askBot(){
         $.ajax({
             url:"bot.php",
@@ -67,11 +78,9 @@ $(document).ready(function(){
         setTimeout(()=> { clickDisabled = false;}, 500);
     }
     function reverseRoles(){
-        let buf = symbols.player;
-        symbols.player = symbols.bot;
-        symbols.bot = buf;
-
-        if(symbols.bot==='x')
+        [symbols.player,symbols.bot] = [symbols.bot,symbols.player];
+        highlightAttacker();
+        if(symbols.bot===ATTACK_SYMBOL)
         {
             askBot();
             preventClicks();

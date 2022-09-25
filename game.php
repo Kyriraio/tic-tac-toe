@@ -30,7 +30,10 @@ require_once ("connectDB.php");
 <body>
 <div class = "game-page page">
     <div class="table-title ">
-        <div class="highlighted"><?php echo $_SESSION['login']; ?> vs TicTacBot</div>
+        <div class="highlighted">
+            <label id="player-name"><?php echo $_SESSION['login']; ?></label>
+            vs
+            <label id="bot-name"> TicTacBot</label></div>
         <div><label id="player-level"><?php echo getLevel() ?></label> Уровень</div>
     </div>
     <div class = "table">
