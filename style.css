@@ -28,6 +28,7 @@ body{
     padding: 15px;
     box-sizing: border-box;
     font-size: 14px;
+    color: #E2E7ED;
 }
 .form button {
     font-family: "Roboto", sans-serif;
@@ -64,7 +65,7 @@ body{
     width: 126px;
     height:126px;
     background-color: #14BDAC;
-
+    position: relative;
 }
 .td div{
     width:100%;
@@ -72,21 +73,26 @@ body{
 }
 .x{
     background:  url(img/x.svg) no-repeat center;
-    display: none;
+    visibility: hidden;
+    position:absolute;
 }
 .o{
     background:  url(img/o.svg) no-repeat center;
-    display: none;
+    visibility: hidden;
+    position : absolute;
+
 }
 .table-title{
-
-    text-align: center;
     padding-bottom:20px;
 }
 .highlighted{
     color: #14BDAC;
+    font-size: 20px;
 }
-.center{
+#center{
     text-align:center;
 
+}
+.error{
+    color: #14BDAC;
 }
