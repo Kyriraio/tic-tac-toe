@@ -40,7 +40,6 @@ $(document).ready(function(){
 
 
     function askBot(){
-        console.log(`Кликать нельзя?${clickDisabled}`);
         $.ajax({
             url:"bot.php",
             type:"POST",
@@ -53,21 +52,25 @@ $(document).ready(function(){
             success: function(response){
                 if(response.id !== -1) {
                     updateField(response.id,symbols.bot);
+                    if(response.result === EMPTY_CELL){
+                        console.log("сработало");
+                        clickDisabled = false;
+                    }
                 }
                 if(response.result !== EMPTY_CELL){
-                    alert(response.result);
-                    restart();
-                    $('#player-level').text(response.level);
-
+                    setTimeout(() => {
+                        alert(response.result);
+                        restart();
+                        $('#player-level').text(response.level);
+                        clickDisabled = false;
+                    }, 300);
                 }
-               clickDisabled = false;
 
             },
             error: function(error){
                 console.log(`Error: ${error}`);
             }
         });
-        console.log(`Кликать нельзя?${clickDisabled}`);
     }
     function clearField(){
         $('.td div').removeClass("visible");
