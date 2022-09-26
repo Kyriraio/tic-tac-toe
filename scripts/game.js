@@ -15,10 +15,9 @@ $(document).ready(function(){
     $('.td').on('click',function(){
         if(clickDisabled) return;
 
-
-
         let id = $(this).data('id');
         if(game_field[id]===EMPTY_CELL) {
+
             clickDisabled = true;
             updateField(id,symbols.player);//player attacks
             askBot();
@@ -38,10 +37,10 @@ $(document).ready(function(){
         })
     }
 
-    let b = new Promise((resolve,reject)=>{
 
-    });
+
     function askBot(){
+        console.log(`Кликать нельзя?${clickDisabled}`);
         $.ajax({
             url:"bot.php",
             type:"POST",
@@ -56,9 +55,8 @@ $(document).ready(function(){
                     updateField(response.id,symbols.bot);
                 }
                 if(response.result !== EMPTY_CELL){
-                    setTimeout(()=> alert(response.result),200);
-                    setTimeout(()=> clearField(),200);
-                    setTimeout(()=> reverseRoles(),200);
+                    alert(response.result);
+                    restart();
                     $('#player-level').text(response.level);
 
                 }
@@ -69,6 +67,7 @@ $(document).ready(function(){
                 console.log(`Error: ${error}`);
             }
         });
+        console.log(`Кликать нельзя?${clickDisabled}`);
     }
     function clearField(){
         $('.td div').removeClass("visible");
@@ -81,21 +80,19 @@ $(document).ready(function(){
     function showCell(cell,symbol){
         $(cell).children(`.${symbol}`).addClass("visible");
     }
-    function disableClicks(){
-        clickDisabled = true;
-        setTimeout(()=> { clickDisabled = false;}, 400);
-    }
+
     function reverseRoles(){
         [symbols.player,symbols.bot] = [symbols.bot,symbols.player];
         highlightAttacker();
+    }
+    function restart(){
+        clearField();
+        reverseRoles();
 
         if(symbols.bot===ATTACK_SYMBOL)
         {
             clickDisabled = true;
             askBot();
-
-            //disableClicks();
-
         }
     }
 
