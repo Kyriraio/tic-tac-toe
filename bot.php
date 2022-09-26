@@ -106,8 +106,8 @@ class Bot{
                 if($this->cost_field[$i+6]==0) return $i+6;
             }
         }
-
-        if($cell = $this->getEmptyDiagonalCell($cost)) return $cell;
+        $cell = $this->getEmptyDiagonalCell($cost);
+        if($cell!==false) return $cell;
         return false;
     }
     public function getSomeValuableCell(): bool|int
@@ -121,7 +121,7 @@ class Bot{
         else {
             $cell = $this->getMostValuableCell(-2);
         }
-        return ($cell) ?: $this->getMostValuableCell();
+        return ($cell!==false) ? $cell : $this->getMostValuableCell();
     }
     public function getMostValuableCell($stupidShift=0): bool|int
     {
@@ -137,7 +137,8 @@ class Bot{
     {
         if($this->counter==2 && $this->field[4]==$this->symbols['player'])
         {
-            $this->response['id']=($cell = $this->getEmptyDiagonalCell(0)) ? $cell : $this->getMostValuableCell();
+            $cell = $this->getEmptyDiagonalCell(0);
+            $this->response['id']=($cell!==false) ? $cell : $this->getMostValuableCell();
         }
         else if($this->counter == 3 && $this->field[4]==$this->symbols['bot'])
         {
@@ -178,10 +179,14 @@ class Bot{
         {
             $this->specialEarlyStrategy();
         }
+        if($this->checkBotWin())
+        {
+            $this->response['result'] =  'lose';
+        }
         if($this->response['id']==-1 && $this->response['result']=='')  {
             $this->response['id'] = $this->getSomeValuableCell();
         }
-        $this->checkBotWin();
+
     }
 
     public function updateLevel(){

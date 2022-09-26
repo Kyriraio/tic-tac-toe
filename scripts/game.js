@@ -15,12 +15,14 @@ $(document).ready(function(){
     $('.td').on('click',function(){
         if(clickDisabled) return;
 
-        preventClicks();
+
 
         let id = $(this).data('id');
         if(game_field[id]===EMPTY_CELL) {
+            clickDisabled = true;
             updateField(id,symbols.player);//player attacks
             askBot();
+
         }
 
     });
@@ -35,6 +37,10 @@ $(document).ready(function(){
                 : $(label_name).removeClass('attacker')
         })
     }
+
+    let b = new Promise((resolve,reject)=>{
+
+    });
     function askBot(){
         $.ajax({
             url:"bot.php",
@@ -52,9 +58,11 @@ $(document).ready(function(){
                 if(response.result !== EMPTY_CELL){
                     setTimeout(()=> alert(response.result),200);
                     setTimeout(()=> clearField(),200);
-                    $('#player-level').text(response.level);
                     setTimeout(()=> reverseRoles(),200);
+                    $('#player-level').text(response.level);
+
                 }
+               clickDisabled = false;
 
             },
             error: function(error){
@@ -63,7 +71,7 @@ $(document).ready(function(){
         });
     }
     function clearField(){
-        $('.td div').css("visibility","hidden");
+        $('.td div').removeClass("visible");
         game_field.fill(EMPTY_CELL);
     }
     function updateField(id,symbol){
@@ -71,40 +79,24 @@ $(document).ready(function(){
         showCell($(`.td[data-id='${id}']`),symbol);
     }
     function showCell(cell,symbol){
-        $(cell).children(`.${symbol}`).css("visibility","visible");
+        $(cell).children(`.${symbol}`).addClass("visible");
     }
-    function preventClicks(){
+    function disableClicks(){
         clickDisabled = true;
-        setTimeout(()=> { clickDisabled = false;}, 500);
+        setTimeout(()=> { clickDisabled = false;}, 400);
     }
     function reverseRoles(){
         [symbols.player,symbols.bot] = [symbols.bot,symbols.player];
         highlightAttacker();
+
         if(symbols.bot===ATTACK_SYMBOL)
         {
+            clickDisabled = true;
             askBot();
-            preventClicks();
+
+            //disableClicks();
+
         }
     }
 
-
-
-
-
 });
-
-/*
-
-$('.highlighted label').on( 'click',function(){
-    console.log(1);
-    symbols = {
-        player : 'o',
-        bot : 'x'
-    };
-    $("#center").css("display","none");
-    askBot();
-    preventClicks();
-    /!*$("#center").css("display","none");*!/
-
-});
-*/

@@ -99,3 +99,6 @@ body{
 .attacker{
     color: red;
 }
+.visible{
+    visibility: visible;
+}
