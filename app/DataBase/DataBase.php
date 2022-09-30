@@ -1,4 +1,8 @@
 <?php
+namespace App\DataBase;
+
+use PDO;
+
 abstract class DataBase{
     private static $host = "localhost";
     private static $user = "root";
@@ -22,5 +26,3 @@ abstract class DataBase{
 
     }
 }
-
-?>

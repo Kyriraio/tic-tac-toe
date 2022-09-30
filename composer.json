@@ -1,0 +1,17 @@
+{
+    "name": "vladb/tic-tac-toe",
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Kyriraio",
+            "email": "vlad_berezka@inbox.ru"
+        }
+    ],
+    "require": {
+      "ext-pdo": "*"
+    }
+}

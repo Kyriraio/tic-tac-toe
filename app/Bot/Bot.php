@@ -1,7 +1,13 @@
 <?php
-session_start();
+namespace App\Bot;
+
+use App\DataBase\DataBase;
+
+require_once __DIR__ . '/../../vendor/autoload.php';
+
 
 class Bot{
+    private const BOT_INTELLIGENCE = 50;
     private int $counter = 0;
     private array $field;
     private array $symbols;
@@ -129,7 +135,7 @@ class Bot{
         if ($max==2) $stupidShift = 0;
         return array_search(max($this->values_field)+$stupidShift, $this->values_field);
     }
-    public function botIsSmart($intelligencePercentage = 65): bool
+    public function botIsSmart($intelligencePercentage = self::BOT_INTELLIGENCE   ): bool
     {
         return ((rand(0, 100) <= $intelligencePercentage));
     }
@@ -200,7 +206,6 @@ class Bot{
 
         if($result=='lose')  $this->response['level']--;
 
-        require_once("connectDB.php");
         $conn = DataBase::connect();
 
         $sql="UPDATE players SET level =:plevel WHERE login=:plogin";
@@ -216,12 +221,3 @@ class Bot{
 
 
 }
-
-
-
-
-$bot = new Bot();
-$bot->getFieldInfo();
-$bot->makeMove();
-$bot->updateLevel();
-$bot->echoResponse();
