@@ -41,7 +41,7 @@ $(document).ready(function(){
 
     function askBot(){
         $.ajax({
-            url:"bot.php",
+            url:"app/Bot/askBot.php",
             type:"POST",
             dataType: 'json',
             data: {

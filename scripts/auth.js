@@ -2,7 +2,7 @@ $( document ).ready( function() {
     $("#auth").click( function() {
 
         $(".error").html("");
-        sendAjaxLoginForm("#auth-form","auth.php");
+        sendAjaxLoginForm("#auth-form","app/Player/Auth.php");
         return false;
 
     });

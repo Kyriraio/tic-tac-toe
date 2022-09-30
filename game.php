@@ -1,7 +1,7 @@
 <?php
 use App\DataBase\DataBase;
 
-require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/vendor/autoload.php';
 
 
 session_start();
@@ -10,7 +10,6 @@ if(!isset($_SESSION['login']))
 {
     header("Location:index.php");
 }
-require_once ("connectDB.php");
  function getLevel(){
         $conn = DataBase::connect();
 
@@ -92,6 +91,6 @@ require_once ("connectDB.php");
 
 </div>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
-<script src="../scripts/game.js"></script>
+<script src="scripts/game.js"></script>
 </body>
 </html>
