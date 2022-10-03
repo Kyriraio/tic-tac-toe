@@ -1,85 +1,96 @@
 <?php
 namespace App\Player;
 
-use App\DataBase\DataBase;
+use App\DataBase\DB;
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 
 class Player {
-    private $password;
-    private $login;
-    private $errors=array();
-    private $pepper='1234';
+    protected DB $db;
+    private string $pepper='1234';
+    private array $input = array();
 
-    public function inputValid(): bool
+    public function __construct(DB $db)
     {
-        return !$this->errors;
+        $this->db = $db;
+        $this->input['login']=htmlentities(trim($_POST['login']), ENT_QUOTES, 'UTF-8');
+        $this->input['password']=htmlentities(trim($_POST['password']), ENT_QUOTES, 'UTF-8');
     }
-    public function validate()
-    {
-        $this->login=htmlentities($this->login, ENT_QUOTES, 'UTF-8');
-        $this->password=htmlentities($this->password, ENT_QUOTES, 'UTF-8');
 
-        if($this->login=="")
+    public function auth() : void
+    {
+        $errors = $this->getInputErrors();
+
+        if(empty($errors))
         {
-            $this->errors=array_merge($this->errors,array('login'=>'Пожалуйста, введите ваш логин'));
-        } elseif (strlen($this->login)<3){
-            $this->errors=array_merge($this->errors,array('login'=>'Минимальная длина логина - 3 символа'));
-        } elseif (strpos($this->login,' ')){
-            $this->errors=array_merge($this->errors,array('login'=>'Ваш логин не должен содержать пробелов'));
+            $playerData = $this->db->run("SELECT salt, password FROM players WHERE login=?",
+                [$this->input['login']]
+            )->fetch();
+
+            if(empty($playerData))
+            {
+                $this->register();
+            }
+            else
+            {
+                $errors = $this->getLoginErrors($playerData);
+            }
         }
-        if($this->password=="")
-        {
-            $this->errors=array_merge($this->errors,array('password'=>'Пожалуйста, введите ваш пароль'));
-        } elseif (strlen($this->password)<8){
-            $this->errors=array_merge($this->errors,array('password'=>'Минимальная длина пароля - 8 символов'));
-        } elseif (strpos($this->password,' ')){
-            $this->errors=array_merge($this->errors,array('password'=>'Ваш пароль не должен содержать пробелов'));
+
+        if(empty($errors)){
+            $_SESSION['login'] = $this->input['login'];
         }
 
+        echo json_encode($errors);
     }
-    public function __construct()
+
+    protected function getLoginErrors($playerData): array
     {
-        $this->login=trim($_POST['login']);
-        $this->password=trim($_POST['password']);
+        return (!password_verify($playerData['salt'].$this->input['password'].$this->pepper,
+            $playerData['password']))
+        ?  array('password'=>'Введён неправильный пароль')
+        :  array();
     }
-    public function auth()
+
+    protected function getInputErrors(): array
     {
+        $errors = array();
 
-        $conn = DataBase::connect();
+        if($this->input['login']=="") {
+            $errors=array_merge($errors,array('login'=>'Пожалуйста, введите ваш логин'));
+        }
+        elseif (strlen($this->input['login'])<3){
+            $errors=array_merge($errors,array('login'=>'Минимальная длина логина - 3 символа'));
+        }
+        elseif (strpos($this->input['login'],' ')){
+            $errors=array_merge($errors,array('login'=>'Ваш логин не должен содержать пробелов'));
+        }
+        if($this->input['password']=="") {
+            $errors=array_merge($errors,array('password'=>'Пожалуйста, введите ваш пароль'));
+        }
+        elseif (strlen($this->input['password'])<8){
+            $errors=array_merge($errors,array('password'=>'Минимальная длина пароля - 8 символов'));
+        }
+        elseif (strpos($this->input['password'],' ')){
+            $errors=array_merge($errors,array('password'=>'Ваш пароль не должен содержать пробелов'));
+        }
+        return $errors;
+    }
 
-        $sql="SELECT * FROM players WHERE login=:plogin";
-        $stmt=$conn->prepare($sql);
-        $stmt->execute([
-            'plogin'=>$this->login,
-        ]);
-        $playerData=$stmt->fetch();
-
-        if(!$playerData)
-        {
+    protected function register(): void
+    {
             $salt = $this->GetRandomSalt();
-            $password =password_hash($salt.$this->password.$this->pepper,PASSWORD_ARGON2ID);
-            $sql="INSERT INTO PLAYERS (login, password, salt) VALUES (:plogin, :ppass, :psalt)";
-            $stmt=$conn->prepare($sql);
-            $stmt->execute([
-                'plogin'=>$this->login,
-                'ppass'=>$password,
-                'psalt'=>$salt
-            ]);
-        }
-        elseif(!password_verify($playerData['salt'].$this->password.$this->pepper,$playerData['password']))
-        {
-            $this->errors=array_merge($this->errors,array('password'=>'Your password is incorrect'));
-        }
+            $this->db->run("INSERT INTO PLAYERS (login, password, salt) VALUES (:login, :pass, :salt)",
+                [
+                    'login'=>$this->input['login'],
+                    'pass'=>password_hash($salt.$this->input['password'].$this->pepper,PASSWORD_ARGON2ID),
+                    'salt'=>$salt
+                ]
+            );
 
-        if(!$this->errors){
-            $_SESSION['login'] = $this->login;
-        }
     }
-    public function echoResponse(){
-        echo json_encode($this->errors);
-    }
-    private function GetRandomSalt($len = 8): string
+
+    protected function GetRandomSalt($len = 8): string
     {
         $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789`~!@#$%^&*()-=_+';
         $l = strlen($chars) - 1;

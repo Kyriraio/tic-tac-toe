@@ -1,12 +1,13 @@
 <?php
 namespace App\Bot;
 
-use App\DataBase\DataBase;
+use App\DataBase\DB;
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 
 
 class Bot{
+    protected DB $db;
     private const BOT_INTELLIGENCE = 50;
     private int $counter = 0;
     private array $field;
@@ -15,13 +16,22 @@ class Bot{
     private array $values_field = [3,2,3,2,4,2,3,2,3];
     private array $response = ['id'=>-1,'level'=>1,'result'=>''];
 
-    public function __construct()
+    public function __construct(DB $db)
     {
+        $this->db = $db;
         $this->field = $_POST['game_field'];
         $this->response['level'] = $_POST['level'];
         $this->symbols= json_decode($_POST['symbols'], true);
     }
-    public function getFieldInfo()
+    public function ask()
+    {
+        $this->getFieldInfo();
+        $this->makeMove();
+        $this->updateLevel();
+
+        echo json_encode($this->response);
+    }
+    private function getFieldInfo()
     {
         for($i=0;$i<9;$i++){
             if($this->field[$i]!='')
@@ -38,23 +48,23 @@ class Bot{
 
         }
     }
-    public function getBotWinningCell(): bool|int
+    private function getBotWinningCell(): bool|int
     {
         return $this->getAnyWinningCell(2);
     }
-    public function getPlayerWinningCell(): bool|int
+    private function getPlayerWinningCell(): bool|int
     {
         return $this->getAnyWinningCell(-2);
     }
-    public function checkBotWin(): bool
+    private function checkBotWin(): bool
     {
         return $this->checkSomeoneWin(3);
     }
-    public function checkPlayerWin(): bool
+    private function checkPlayerWin(): bool
     {
         return $this->checkSomeoneWin(-3);
     }
-    public function checkSomeoneWin($cost): bool
+    private function checkSomeoneWin($cost): bool
     {
         for($i = 0;$i<9;$i+=3) {
             if ($this->cost_field[$i] + $this->cost_field[$i + 1] + $this->cost_field[$i + 2] == $cost)
@@ -79,7 +89,7 @@ class Bot{
         return false;
     }
 
-    public function getEmptyDiagonalCell($cost): bool|int
+    private function getEmptyDiagonalCell($cost): bool|int
     {
         if($this->cost_field[0] + $this->cost_field[4] + $this->cost_field[8] == $cost)
         {
@@ -95,7 +105,7 @@ class Bot{
         }
       return false;
     }
-    public function getAnyWinningCell($cost): bool|int
+    private function getAnyWinningCell($cost): bool|int
     {
         for($i = 0;$i<9;$i+=3) {
             if ($this->cost_field[$i] + $this->cost_field[$i + 1] + $this->cost_field[$i + 2] == $cost) {
@@ -116,7 +126,7 @@ class Bot{
         if($cell!==false) return $cell;
         return false;
     }
-    public function getSomeValuableCell(): bool|int
+    private function getSomeValuableCell(): bool|int
     {
         if($this->botIsSmart()){
             $cell = $this->getMostValuableCell();
@@ -129,13 +139,13 @@ class Bot{
         }
         return ($cell!==false) ? $cell : $this->getMostValuableCell();
     }
-    public function getMostValuableCell($stupidShift=0): bool|int
+    private function getMostValuableCell($stupidShift=0): bool|int
     {
         $max = max($this->values_field);
         if ($max==2) $stupidShift = 0;
         return array_search(max($this->values_field)+$stupidShift, $this->values_field);
     }
-    public function botIsSmart($intelligencePercentage = self::BOT_INTELLIGENCE   ): bool
+    private function botIsSmart($intelligencePercentage = self::BOT_INTELLIGENCE   ): bool
     {
         return ((rand(0, 100) <= $intelligencePercentage));
     }
@@ -156,7 +166,7 @@ class Bot{
 
         }
     }
-    public function makeMove()
+    private function makeMove()
     {
 
         if($this->checkPlayerWin())
@@ -195,7 +205,7 @@ class Bot{
 
     }
 
-    public function updateLevel(){
+    private function updateLevel(){
         $result = $this->response['result'];
 
         if($result=='' || $result=='draw') return;
@@ -206,18 +216,14 @@ class Bot{
 
         if($result=='lose')  $this->response['level']--;
 
-        $conn = DataBase::connect();
+        $this->db->run("UPDATE players SET level =:level WHERE login=:login",
+            [
+                'level'=>$this->response['level'],
+                'login'=>$_SESSION['login']
+            ]
+        );
+    }
 
-        $sql="UPDATE players SET level =:plevel WHERE login=:plogin";
-        $stmt=$conn->prepare($sql);
-        $stmt->execute([
-            'plevel'=>$this->response['level'],
-            'plogin'=>$_SESSION['login']
-        ]);
-    }
-    public function echoResponse(){
-        echo json_encode($this->response);
-    }
 
 
 }

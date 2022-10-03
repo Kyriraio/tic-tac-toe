@@ -1,5 +1,5 @@
 <?php
-use App\DataBase\DataBase;
+use App\DataBase\DB;
 
 require_once __DIR__ . '/vendor/autoload.php';
 
@@ -10,16 +10,11 @@ if(!isset($_SESSION['login']))
 {
     header("Location:index.php");
 }
- function getLevel(){
-        $conn = DataBase::connect();
-
-        $sql="SELECT level FROM players WHERE login=:plogin";
-        $stmt=$conn->prepare($sql);
-        $stmt->execute([
-            'plogin'=>$_SESSION['login']
-        ]);
-        return $stmt->fetch()['level'];
-    }
+ function getLevel()
+ {
+     $stmt = (new DB("gamedb"))->run("SELECT level FROM players WHERE login=?",[$_SESSION['login']]);
+     return $stmt->fetch()['level'];
+ }
 ?>
 <!doctype html>
 <html lang="en">
