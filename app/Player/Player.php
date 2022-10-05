@@ -79,7 +79,7 @@ class Player {
 
     protected function register(): void
     {
-            $salt = $this->GetRandomSalt();
+            $salt = $this->getRandomSalt();
             $this->db->run("INSERT INTO PLAYERS (login, password, salt) VALUES (:login, :pass, :salt)",
                 [
                     'login'=>$this->input['login'],
@@ -90,7 +90,7 @@ class Player {
 
     }
 
-    protected function GetRandomSalt($len = 8): string
+    protected function getRandomSalt($len = 8): string
     {
         $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789`~!@#$%^&*()-=_+';
         $l = strlen($chars) - 1;
